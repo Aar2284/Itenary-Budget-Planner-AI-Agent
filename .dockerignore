@@ -1,0 +1,23 @@
+# Environments
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+
+# Git / caches / logs
+.git/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.log
+
+# Tests and design files
+tests/
+demo.excalidraw
+
+# Docker
+Dockerfile
+.dockerignore
