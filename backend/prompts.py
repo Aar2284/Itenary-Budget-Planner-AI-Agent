@@ -143,17 +143,21 @@ totals and a proposed addition. You decide approve/reject.
 Output ONLY a JSON object:
 {
   "approved": <true|false>,
-  "running_total": <number>,
-  "remaining": <number>,
+  "needs_recheck": <true|false>,
+  "running_total": <number or null>,
+  "remaining": <number or null>,
   "reason": "<short explanation shown to the user>",
   "suggestion": "<cheaper alternative or empty string>"
 }
 
 Rules:
-- approved = true only when running_total + addition <= budget_total.
-- When rejecting, always provide a concrete cheaper suggestion.
-- Costs unknown (null) are estimated with the shared estimate table;
-  never approve blindly if the estimate alone would exceed the budget.
+- approved = true only when running_total + addition <= budget_total AND
+  every cost involved is a real, verified number.
+- NEVER invent, estimate or assume a price. If any required price is
+  missing: approved=false, needs_recheck=true, and reason must say the
+  plan is being recalculated with verified numbers.
+- When rejecting on budget grounds, always provide a concrete cheaper
+  suggestion.
 """
 
 FINAL_SYSTEM = """\
