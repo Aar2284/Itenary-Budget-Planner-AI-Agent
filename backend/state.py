@@ -41,8 +41,12 @@ class TripState(TypedDict, total=False):
     hotel_results: str
     activity_results: str
     transport_results: str
-    itinerary_json: dict[str, Any]   # {"days": [{day, date?, activities:[...]}], "total_cost": float}
-    itinerary: str                   # final markdown rendering
+    flight_items: list[dict[str, Any]]       # structured findings, await gate
+    hotel_items: list[dict[str, Any]]
+    activity_items: dict[str, Any]           # {"days": [...]} shape
+    transport_items: list[dict[str, Any]]
+    itinerary_json: dict[str, Any]           # {"days": [{day, activities:[...]}], "total_cost": float}
+    itinerary: str                           # final markdown rendering
 
     # ---- coordination / observability ----
     current_agent: str               # which worker is running right now
