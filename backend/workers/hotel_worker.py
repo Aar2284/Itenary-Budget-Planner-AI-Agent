@@ -20,35 +20,14 @@ from typing import Any
 from tools.tavily_tool import tavily_search
 
 from backend.prompts import sanitize
-from backend.workers.base import EventEmit, WorkerError, default_emit, log_event
-
-
-# Real money figures only — same discipline as the Budget Worker.
-_MONEY_RE = re.compile(
-    r"(?<![\w.])(?:[¤$€£¥]\s?|"
-    r"\b(?:USD|BDT|INR|EUR|GBP|JPY|AED|SGD|THB|MYR)\s)"
-    r"([\d][\d,]{1,9})(?:\s?(?:per night|/night|per person|per day))?",
-    re.IGNORECASE,
+from backend.workers.base import (
+    EventEmit,
+    WorkerError,
+    default_emit,
+    extract_prices,
+    first_price,
+    log_event,
 )
-
-
-def extract_prices(text: str) -> list[float]:
-    """Pull real per-night price figures out of search snippets.
-
-    Returns [] when nothing is found — an empty list is honest; a made
-    up number never is.
-    """
-    prices: list[float] = []
-    for match in _MONEY_RE.finditer(text or ""):
-        value = float(match.group(1).replace(",", ""))
-        if 0 < value <= 1_000_000:
-            prices.append(value)
-    return prices
-
-
-def _first_price(text: str) -> float | None:
-    prices = extract_prices(text)
-    return min(prices) if prices else None
 
 
 def parse_hotel_snippets(raw: str, max_items: int = 4) -> list[dict[str, Any]]:
@@ -67,7 +46,7 @@ def parse_hotel_snippets(raw: str, max_items: int = 4) -> list[dict[str, Any]]:
             continue
         title_match = re.match(r"\*\*(.+?)\*\*", chunk)
         title = title_match.group(1) if title_match else chunk.splitlines()[0][:80]
-        price = _first_price(chunk)
+        price = first_price(chunk)
         items.append(
             {
                 "type": "hotel",
