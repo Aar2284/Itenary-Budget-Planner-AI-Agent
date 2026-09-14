@@ -13,27 +13,12 @@ for the shared trip-state.
 
 from __future__ import annotations
 
-import time
-from typing import Any, Callable
+from typing import Any
 
 from tools.flight_tool import search_flights
 
 from backend.prompts import sanitize
-
-EventEmit = Callable[[str, str], None]
-
-
-class WorkerError(RuntimeError):
-    """Raised when a worker's tool fails and the step must be retried."""
-
-
-def _default_emit(event_type: str, detail: str) -> None:
-    return None
-
-
-def _log(state: dict[str, Any], agent: str, action: str, status: str) -> list[dict[str, Any]]:
-    entry = {"agent": agent, "action": action, "status": status, "ts": time.time()}
-    return list(state.get("agent_log") or []) + [entry]
+from backend.workers.base import EventEmit, WorkerError, default_emit, log_event
 
 
 def parse_flight_text(raw: str) -> list[dict[str, Any]]:
@@ -91,7 +76,7 @@ def flight_worker(
     emit: EventEmit | None = None,
 ) -> dict[str, Any]:
     """Search flights for the trip and update the shared state."""
-    emit = emit or _default_emit
+    emit = emit or default_emit
     query = sanitize(state.get("user_query", ""))
     budget = state.get("budget_total") or 0
 
@@ -130,6 +115,6 @@ def flight_worker(
         "flight_results": raw,
         "flight_items": items,
         "current_agent": "flight_worker",
-        "agent_log": _log(state, "flight_worker", "search_flights", "done"),
+        "agent_log": log_event(state, "flight_worker", "search_flights", "done"),
         "llm_calls": state.get("llm_calls", 0),
     }
